@@ -10,7 +10,7 @@
 #include "pico/multicore.h"
 #include "pico/sync.h"  // For spinlocks
 
-#define LED_PIN 25
+#include "gpio.h"
 
 TaskHandle_t blinkTaskHandle = NULL;
 
@@ -18,9 +18,9 @@ void blinkTask(void *params) {
     printf("Executing blinkTask\n");
 
     for (;;) {
-        gpio_put(LED_PIN, 1);
+        gpioWrite(GPIO_LED, 1);
         vTaskDelay(pdMS_TO_TICKS(500));
-        gpio_put(LED_PIN, 0);
+        gpioWrite(GPIO_LED, 0);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
@@ -28,8 +28,7 @@ void blinkTask(void *params) {
 int main() {
     stdio_init_all();
 
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
+    gpioInit();
 
     printf("Hello, world!\n");
 

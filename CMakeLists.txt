@@ -52,6 +52,7 @@ pico_sdk_init()
 
 add_executable(${CMAKE_PROJECT_NAME}
     src/main.c
+    src/gpio.c
 )
 
 pico_set_program_name(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}")
@@ -66,6 +67,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     pico_stdlib
     FreeRTOS-Kernel
     FreeRTOS-Kernel-Heap4
+    hardware_pwm
     )
 
 # Add the standard include files to the build
