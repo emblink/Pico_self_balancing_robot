@@ -53,6 +53,7 @@ pico_sdk_init()
 add_executable(${CMAKE_PROJECT_NAME}
     src/main.c
     src/gpio.c
+    src/motor.c
 )
 
 pico_set_program_name(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}")

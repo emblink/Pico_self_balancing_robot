@@ -11,8 +11,35 @@
 #include "pico/sync.h"  // For spinlocks
 
 #include "gpio.h"
+#include "motor.h"
 
 TaskHandle_t blinkTaskHandle = NULL;
+TaskHandle_t motorTaskHandle = NULL;
+
+void motorTask(void *params) {
+    printf("Executing motorTask\n");
+    motorInit();
+
+    for (;;) {
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 255);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorStop(MOTOR_A);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 255);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorStop(MOTOR_A);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 50);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorBrake(MOTOR_A);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 50);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorBrake(MOTOR_A);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+}
 
 void blinkTask(void *params) {
     printf("Executing blinkTask\n");
@@ -39,6 +66,17 @@ int main() {
         NULL,
         2,
         &blinkTaskHandle
+    );
+
+    configASSERT(status == pdPASS);
+
+    status = xTaskCreate(
+        motorTask,
+        "motorTask",
+        1024,
+        NULL,
+        2,
+        &motorTaskHandle
     );
 
     configASSERT(status == pdPASS);
