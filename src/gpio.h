@@ -31,5 +31,5 @@ void gpioInit(void);
 bool gpioRead(GPIO_pin pin);
 void gpioWrite(GPIO_pin pin, bool value);
 void gpioSetPWM(GPIO_pin pin, uint8_t dutyCycle);
-
+int gpioGetPinNumber(GPIO_pin pin);
 

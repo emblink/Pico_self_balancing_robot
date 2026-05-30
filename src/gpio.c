@@ -19,8 +19,8 @@ static const GpioPinConfig gpioConfigs[GPIO_COUNT] = {
     [GPIO_MOTOR_BIN1] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 17,           .isOutput = true,    .initialValue = 0 },
     [GPIO_MOTOR_BIN2] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 16,           .isOutput = true,    .initialValue = 0 },
     [GPIO_MOTOR_STBY] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 18,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_PIO_ENCODER_A1] = { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
-    [GPIO_MOTOR_PIO_ENCODER_A2] = { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
+    [GPIO_MOTOR_PIO_ENCODER_A1] = { .type = PIN_TYPE_GPIO,   .pinNumber = 28,           .isOutput = false,   .initialValue = 0 },
+    [GPIO_MOTOR_PIO_ENCODER_A2] = { .type = PIN_TYPE_GPIO,   .pinNumber = 29,           .isOutput = false,   .initialValue = 0 },
     [GPIO_MOTOR_PIO_ENCODER_B1] = { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
     [GPIO_MOTOR_PIO_ENCODER_B2] = { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
     [GPIO_MPU_I2C_SCL] =          { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = true,    .initialValue = 1 },
@@ -78,4 +78,9 @@ void gpioSetPWM(GPIO_pin pin, uint8_t dutyCycle) {
     assert(gpioConfigs[pin].type == PIN_TYPE_PWM);
 
     pwm_set_gpio_level(gpioConfigs[pin].pinNumber, dutyCycle);
+}
+
+int gpioGetPinNumber(GPIO_pin pin) {
+    assert(pin < GPIO_COUNT);
+    return gpioConfigs[pin].pinNumber;
 }

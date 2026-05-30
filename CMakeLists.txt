@@ -56,6 +56,9 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/motor.c
 )
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)
+pico_generate_pio_header(${CMAKE_PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/quadrature_encoder.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/generated)
+
 pico_set_program_name(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}")
 pico_set_program_version(${CMAKE_PROJECT_NAME} "0.1")
 
@@ -69,6 +72,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     FreeRTOS-Kernel
     FreeRTOS-Kernel-Heap4
     hardware_pwm
+    hardware_pio
     )
 
 # Add the standard include files to the build
@@ -77,6 +81,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         include/
         "${FREERTOS_DIR}/include"
         "${FREERTOS_PORT_DIR}/include"
+        src/
 )
 
 pico_add_extra_outputs(${CMAKE_PROJECT_NAME})
