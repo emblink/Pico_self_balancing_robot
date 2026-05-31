@@ -54,6 +54,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/main.c
     src/gpio.c
     src/motor.c
+    src/mpu6050.c
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)
@@ -73,6 +74,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     FreeRTOS-Kernel-Heap4
     hardware_pwm
     hardware_pio
+    hardware_i2c
     )
 
 # Add the standard include files to the build

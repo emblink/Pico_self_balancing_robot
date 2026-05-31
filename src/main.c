@@ -17,9 +17,49 @@
 #include "hardware/timer.h"
 #include "quadrature_encoder.pio.h"
 
+#include "mpu6050.h"
+
 TaskHandle_t blinkTaskHandle = NULL;
 TaskHandle_t motorTaskHandle = NULL;
 TaskHandle_t encoderTaskHandle = NULL;
+TaskHandle_t mpu6050TaskHandle = NULL;
+
+void mpu6050Task(void *params) {
+    printf("MPU6050 init...\n");
+    mpu6050Init();
+
+    for (;;) {
+        int16_t acceleration[3] = {0};
+        int16_t gyro[3] = {0};
+        int16_t temp = 0;
+        mpu6050ReadData(acceleration, gyro, &temp);
+        /*
+        // These are the raw numbers from the chip, so will need tweaking to be really useful.
+        // See the datasheet for more information
+        printf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]);
+        printf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
+        // Temperature is simple so use the datasheet calculation to get deg C.
+        // Note this is chip temperature.
+        printf("Temp. = %f\n", (temp / 340.0) + 36.53);
+        */
+
+        float ax = (float)acceleration[0] / 16384.0f;
+        float ay = (float)acceleration[1] / 16384.0f;
+        float az = (float)acceleration[2] / 16384.0f;
+
+        float gx = (float)gyro[0] / 131.0f;
+        float gy = (float)gyro[1] / 131.0f;
+        float gz = (float)gyro[2] / 131.0f;
+
+        float t_c = ((float)temp / 340.0f) + 36.53f;
+
+        printf("Acc:  X %6.2f, Y %6.2f, Z %6.2f\n", ax, ay, az);
+        printf("Gyro: X %6.2f, Y %6.2f, Z %6.2f\n", gx, gy, gz);
+        printf("Temp: %5.1f°C\n", t_c);
+        
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
 
 void encoderTask(void *params) {
     printf("Executing encoderTask\n");
@@ -127,6 +167,17 @@ int main() {
         NULL,
         2,
         &encoderTaskHandle
+    );
+
+    configASSERT(status == pdPASS);
+
+    status = xTaskCreate(
+        mpu6050Task,
+        "mpu6050Task",
+        1024,
+        NULL,
+        2,
+        &mpu6050TaskHandle
     );
 
     configASSERT(status == pdPASS);
