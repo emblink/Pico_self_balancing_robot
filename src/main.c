@@ -96,11 +96,11 @@ void mpu6050Task(void *params) {
         // printf("Acc:  X %6.2f, Y %6.2f, Z %6.2f\n", ax, ay, az);
         // printf("Gyro: X %6.2f, Y %6.2f, Z %6.2f\n", gx, gy, gz);
         // printf("Temp: %5.1f°C\n", t_c);
-
+        
         float angle_acc = atan2f(ax, sqrtf(ay * ay + az * az)) * 57.2957f;
-
+        
         float gx_final = gx - gyro_bias_x;
-
+        
         // Complementary filter to combine accelerometer and gyroscope data
         robot_angle = alpha * (robot_angle + gx_final * dt) + (1.0f - alpha) * angle_acc;
         
@@ -111,63 +111,84 @@ void mpu6050Task(void *params) {
 
 void encoderTask(void *params) {
     printf("Executing encoderTask\n");
-    int new_value, delta, old_value = 0;
-    int last_value = -1, last_delta = -1;
+    int new_value_enc_A = 0;
+    int new_value_enc_B = 0;
+    int delta_enc_A = 0;
+    int delta_enc_B = 0;
+    int old_value_enc_A = 0;
+    int old_value_enc_B = 0;
+    int last_value_enc_A = -1;
+    int last_value_enc_B = -1;
+    int last_delta_enc_A = -1;
+    int last_delta_enc_B = -1;
 
-    const uint PIN_AB = gpioGetPinNumber(GPIO_MOTOR_PIO_ENCODER_A1); // Assuming A1 and A2 are consecutive pins
+    const uint PIN_A = gpioGetPinNumber(GPIO_MOTOR_PIO_ENCODER_A1); // Assuming A1 and A2 are consecutive pins
+    const uint PIN_B = gpioGetPinNumber(GPIO_MOTOR_PIO_ENCODER_B1);
 
     printf("Hello from quadrature encoder\n");
 
-    PIO pio = pio0;
-    const uint sm = 0;
+    PIO pio= pio0;
+    const uint sm_A = 0;
+    const uint sm_B = 1;
 
     // we don't really need to keep the offset, as this program must be loaded
     // at offset 0
     pio_add_program(pio, &quadrature_encoder_program);
-    quadrature_encoder_program_init(pio, sm, PIN_AB, 0);
-
+    quadrature_encoder_program_init(pio, sm_A, PIN_A, 0);
+    quadrature_encoder_program_init(pio, sm_B, PIN_B, 0);
     for (;;) {
         // note: thanks to two's complement arithmetic delta will always
         // be correct even when new_value wraps around MAXINT / MININT
-        new_value = quadrature_encoder_get_count(pio, sm);
-        delta = new_value - old_value;
-        old_value = new_value;
+        new_value_enc_A = quadrature_encoder_get_count(pio, sm_A);
+        delta_enc_A = new_value_enc_A - old_value_enc_A;
+        old_value_enc_A = new_value_enc_A;
 
-        if (new_value != last_value || delta != last_delta ) {
-            printf("position %8d, delta %6d\n", new_value, delta);
-            last_value = new_value;
-            last_delta = delta;
+        new_value_enc_B = quadrature_encoder_get_count(pio, sm_B);
+        delta_enc_B = new_value_enc_B - old_value_enc_B;
+        old_value_enc_B = new_value_enc_B;
+
+        if (new_value_enc_A != last_value_enc_A || delta_enc_A != last_delta_enc_A ) {
+            printf("Encoder A: position %8d, delta %6d\n", new_value_enc_A, delta_enc_A);
+            last_value_enc_A = new_value_enc_A;
+            last_delta_enc_A = delta_enc_A;
         }
+
+        if (new_value_enc_B != last_value_enc_B || delta_enc_B != last_delta_enc_B ) {
+            printf("Encoder B: position %8d, delta %6d\n", new_value_enc_B, delta_enc_B);
+            last_value_enc_B = new_value_enc_B;
+            last_delta_enc_B = delta_enc_B;
+        }
+
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
 static void motorTest(void) {
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 255);
-        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CW, 255);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorStop(MOTOR_A);
-        motorStop(MOTOR_B);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 255);
-        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CCW, 255);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorStop(MOTOR_A);
-        motorStop(MOTOR_B);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+    motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 255);
+    motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CW, 255);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    motorStop(MOTOR_A);
+    motorStop(MOTOR_B);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 255);
+    motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CCW, 255);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    motorStop(MOTOR_A);
+    motorStop(MOTOR_B);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 50);
-        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CW, 50);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorBrake(MOTOR_A);
-        motorBrake(MOTOR_B);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 50);
-        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CCW, 50);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorBrake(MOTOR_A);
-        motorBrake(MOTOR_B);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+    motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 50);
+    motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CW, 50);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    motorBrake(MOTOR_A);
+    motorBrake(MOTOR_B);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 50);
+    motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CCW, 50);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    motorBrake(MOTOR_A);
+    motorBrake(MOTOR_B);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 }
 
 void motorTask(void *params) {
