@@ -13,21 +13,23 @@ typedef struct {
 #define PIN_UNUSED -1
 
 static const GpioPinConfig gpioConfigs[GPIO_COUNT] = {
-    [GPIO_LED] =                  { .type = PIN_TYPE_GPIO,   .pinNumber = 25,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_AIN1] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 19,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_AIN2] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 20,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_BIN1] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 17,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_BIN2] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 16,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_STBY] =           { .type = PIN_TYPE_GPIO,   .pinNumber = 18,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_PIO_ENCODER_A1] = { .type = PIN_TYPE_GPIO,   .pinNumber = 28,           .isOutput = false,   .initialValue = 0 },
-    [GPIO_MOTOR_PIO_ENCODER_A2] = { .type = PIN_TYPE_GPIO,   .pinNumber = 29,           .isOutput = false,   .initialValue = 0 },
-    [GPIO_MOTOR_PIO_ENCODER_B1] = { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
-    [GPIO_MOTOR_PIO_ENCODER_B2] = { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
-    [GPIO_MPU_I2C_SCL] =          { .type = PIN_TYPE_GPIO,   .pinNumber = 4,            .isOutput = false,   .initialValue = 1 },
-    [GPIO_MPU_I2C_SDA] =          { .type = PIN_TYPE_GPIO,   .pinNumber = 5,            .isOutput = false,   .initialValue = 1 },
-    [GPIO_BATTERY_VOLTAGE] =      { .type = PIN_TYPE_GPIO,   .pinNumber = PIN_UNUSED,   .isOutput = false,   .initialValue = 0 },
-    [GPIO_MOTOR_PWMA] =           { .type = PIN_TYPE_PWM,    .pinNumber = 21,           .isOutput = true,    .initialValue = 0 },
-    [GPIO_MOTOR_PWMB] =           { .type = PIN_TYPE_PWM,    .pinNumber = 22,           .isOutput = true,    .initialValue = 0 },
+    [GPIO_LED] =                  { .type = PIN_TYPE_GPIO,        .pinNumber = 25,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_PWMA] =           { .type = PIN_TYPE_PWM,         .pinNumber = 22,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_AIN2] =           { .type = PIN_TYPE_GPIO,        .pinNumber = 21,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_AIN1] =           { .type = PIN_TYPE_GPIO,        .pinNumber = 20,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_STBY] =           { .type = PIN_TYPE_GPIO,        .pinNumber = 19,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_BIN1] =           { .type = PIN_TYPE_GPIO,        .pinNumber = 18,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_BIN2] =           { .type = PIN_TYPE_GPIO,        .pinNumber = 17,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_PWMB] =           { .type = PIN_TYPE_PWM,         .pinNumber = 16,  .isOutput = true,   .initialValue = 0 },
+    [GPIO_MOTOR_PIO_ENCODER_A1] = { .type = PIN_TYPE_GPIO,        .pinNumber = 10,  .isOutput = false,  .initialValue = 0 },
+    [GPIO_MOTOR_PIO_ENCODER_A2] = { .type = PIN_TYPE_GPIO,        .pinNumber = 11,  .isOutput = false,  .initialValue = 0 },
+    [GPIO_MOTOR_PIO_ENCODER_B1] = { .type = PIN_TYPE_GPIO,        .pinNumber = 12,  .isOutput = false,  .initialValue = 0 },
+    [GPIO_MOTOR_PIO_ENCODER_B2] = { .type = PIN_TYPE_GPIO,        .pinNumber = 13,  .isOutput = false,  .initialValue = 0 },
+    [GPIO_MPU_I2C_SDA] =          { .type = PIN_TYPE_PERIPHERAL,  .pinNumber = 4,   .isOutput = false,  .initialValue = 1 },
+    [GPIO_MPU_I2C_SCL] =          { .type = PIN_TYPE_PERIPHERAL,  .pinNumber = 5,   .isOutput = false,  .initialValue = 1 },
+    [GPIO_BATTERY_VOLTAGE] =      { .type = PIN_TYPE_GPIO,        .pinNumber = 29,  .isOutput = false,  .initialValue = 0 },
+    [GPIO_ESP32_UART_RX] =        { .type = PIN_TYPE_PERIPHERAL,  .pinNumber = 0,   .isOutput = false,  .initialValue = 0 },
+    [GPIO_ESP32_UART_TX] =        { .type = PIN_TYPE_PERIPHERAL,  .pinNumber = 1,   .isOutput = true,   .initialValue = 0 },
 };
 
 void gpioInit(void) {

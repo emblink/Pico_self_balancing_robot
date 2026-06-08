@@ -18,6 +18,8 @@ typedef enum {
     GPIO_MPU_I2C_SCL,
     GPIO_MPU_I2C_SDA,
     GPIO_BATTERY_VOLTAGE,
+    GPIO_ESP32_UART_RX,
+    GPIO_ESP32_UART_TX,
     GPIO_COUNT
 } GPIO_pin;
 

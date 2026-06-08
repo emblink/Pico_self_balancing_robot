@@ -18,15 +18,55 @@
 #include "quadrature_encoder.pio.h"
 
 #include "mpu6050.h"
+#include <math.h>
 
 TaskHandle_t blinkTaskHandle = NULL;
 TaskHandle_t motorTaskHandle = NULL;
 TaskHandle_t encoderTaskHandle = NULL;
 TaskHandle_t mpu6050TaskHandle = NULL;
 
+static float measureGyroBiasX(void) {
+    printf("Calibration IMU... Do not move the robot!\n");
+    int32_t gyro_sum = 0;
+    int samples = 200;
+    float gyro_bias_x = 0.0f;
+
+    for (int i = 0; i < samples; i++) {
+        int16_t acc_raw[3], gyro_raw[3], temp_raw;
+        if (mpu6050ReadData(acc_raw, gyro_raw, &temp_raw)) {
+            gyro_sum += gyro_raw[0];
+        }
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    gyro_bias_x = ((float)gyro_sum / samples) / 131.0f;
+    printf("Calibration finished! Bias X: %f\n", gyro_bias_x);
+    return gyro_bias_x;
+}
+
+static void mpuDataToTeleplot(float ax, float ay, float az, float gx, float gy, float gz, float angle_acc, float robot_angle) {
+    printf(">AccX:%6.2f\n", ax);
+    printf(">AccY:%6.2f\n", ay);
+    printf(">AccZ:%6.2f\n", az);
+
+    printf(">GyroX:%6.2f\n", gx);
+    printf(">GyroY:%6.2f\n", gy);
+    printf(">GyroZ:%6.2f\n", gz);
+
+    printf(">Angle_Acc:%6.2f\n", angle_acc);
+    printf(">Angle_Filtered:%6.2f\n", robot_angle);
+}
+
 void mpu6050Task(void *params) {
     printf("MPU6050 init...\n");
     mpu6050Init();
+
+    #define GYRO_BIAS_X 10.121f // Pre-calibrated bias for gyro X axis, in degrees per second
+    float gyro_bias_x = GYRO_BIAS_X;
+    // float gyro_bias_x = mesureGyroBiasX(); // Uncomment this line to perform live calibration on startup instead of using pre-calibrated bias
+
+    float robot_angle = 0.0f; // Final angle after complementary filter
+    const float alpha = 0.98f; // Complementary filter coefficient
+    const float dt = 0.01f;   // 10ms time step
 
     for (;;) {
         int16_t acceleration[3] = {0};
@@ -53,11 +93,19 @@ void mpu6050Task(void *params) {
 
         float t_c = ((float)temp / 340.0f) + 36.53f;
 
-        printf("Acc:  X %6.2f, Y %6.2f, Z %6.2f\n", ax, ay, az);
-        printf("Gyro: X %6.2f, Y %6.2f, Z %6.2f\n", gx, gy, gz);
-        printf("Temp: %5.1f°C\n", t_c);
+        // printf("Acc:  X %6.2f, Y %6.2f, Z %6.2f\n", ax, ay, az);
+        // printf("Gyro: X %6.2f, Y %6.2f, Z %6.2f\n", gx, gy, gz);
+        // printf("Temp: %5.1f°C\n", t_c);
+
+        float angle_acc = atan2f(ax, sqrtf(ay * ay + az * az)) * 57.2957f;
+
+        float gx_final = gx - gyro_bias_x;
+
+        // Complementary filter to combine accelerometer and gyroscope data
+        robot_angle = alpha * (robot_angle + gx_final * dt) + (1.0f - alpha) * angle_acc;
         
-        vTaskDelay(pdMS_TO_TICKS(100));
+        mpuDataToTeleplot(ax, ay, az, gx, gy, gz, angle_acc, robot_angle);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -94,29 +142,41 @@ void encoderTask(void *params) {
     }
 }
 
+static void motorTest(void) {
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 255);
+        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CW, 255);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorStop(MOTOR_A);
+        motorStop(MOTOR_B);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 255);
+        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CCW, 255);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorStop(MOTOR_A);
+        motorStop(MOTOR_B);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 50);
+        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CW, 50);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorBrake(MOTOR_A);
+        motorBrake(MOTOR_B);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 50);
+        motorSetSpeed(MOTOR_B, MOTOR_DIRECTION_CCW, 50);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        motorBrake(MOTOR_A);
+        motorBrake(MOTOR_B);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+}
 
 void motorTask(void *params) {
     printf("Executing motorTask\n");
     motorInit();
+    // motorTest();
 
     for (;;) {
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 255);
         vTaskDelay(pdMS_TO_TICKS(1000));
-        motorStop(MOTOR_A);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 255);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorStop(MOTOR_A);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CW, 50);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorBrake(MOTOR_A);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-        motorSetSpeed(MOTOR_A, MOTOR_DIRECTION_CCW, 50);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        motorBrake(MOTOR_A);
-        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
 
