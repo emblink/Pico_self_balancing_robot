@@ -20,6 +20,8 @@
 #include "mpu6050.h"
 #include <math.h>
 
+#include "protocol.h"
+
 TaskHandle_t blinkTaskHandle = NULL;
 TaskHandle_t motorTaskHandle = NULL;
 TaskHandle_t encoderTaskHandle = NULL;
@@ -263,6 +265,7 @@ int main() {
 
     configASSERT(status == pdPASS);
 
+    protocolInit();
     vTaskStartScheduler();
 
     // code will never reach here if everything goes well.

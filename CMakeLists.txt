@@ -55,6 +55,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/gpio.c
     src/motor.c
     src/mpu6050.c
+    src/protocol.c
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)
@@ -75,6 +76,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     hardware_pwm
     hardware_pio
     hardware_i2c
+    hardware_uart
     )
 
 # Add the standard include files to the build
