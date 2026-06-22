@@ -36,7 +36,7 @@ void motorSetSpeed(Motor_id motor, Motor_direction dir, uint8_t speed)
         }
         gpioSetPWM(GPIO_MOTOR_PWMA, speed);
     } else if (motor == MOTOR_B) {
-        if (dir == MOTOR_DIRECTION_CCW) {
+        if (dir == MOTOR_DIRECTION_CW) {
             gpioWrite(GPIO_MOTOR_BIN1, true);
             gpioWrite(GPIO_MOTOR_BIN2, false);
         } else {
