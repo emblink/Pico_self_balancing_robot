@@ -21,6 +21,10 @@
 #include <math.h>
 
 #include "protocol.h"
+#include "pid.h"
+
+#define MIN_MOTOR_PWM 40.0f
+#define DEAD_BAND 10.0f
 
 TaskHandle_t blinkTaskHandle = NULL;
 TaskHandle_t motorTaskHandle = NULL;
@@ -45,7 +49,15 @@ static float measureGyroBiasX(void) {
     return gyro_bias_x;
 }
 
-static void mpuDataToTeleplot(float ax, float ay, float az, float gx, float gy, float gz, float angle_acc, float robot_angle) {
+static void mpuDataToTeleplot(float ax, float ay, float az, float gx, float gy, float gz, float angle_acc, float robot_angle, float motor_PWM, float error) {
+    printf(">Motor_PWM:%3.2f\n", motor_PWM);
+    printf(">Error:%6.2f\n", error);
+    printf(">Angle_Filtered:%6.2f\n", robot_angle);
+    
+    printf(">kP:%6.2f\n", pidGetKp());
+    printf(">kD:%6.2f\n", pidGetKd());
+    printf(">kI:%6.2f\n", pidGetKi());
+
     printf(">AccX:%6.2f\n", ax);
     printf(">AccY:%6.2f\n", ay);
     printf(">AccZ:%6.2f\n", az);
@@ -55,12 +67,12 @@ static void mpuDataToTeleplot(float ax, float ay, float az, float gx, float gy, 
     printf(">GyroZ:%6.2f\n", gz);
 
     printf(">Angle_Acc:%6.2f\n", angle_acc);
-    printf(">Angle_Filtered:%6.2f\n", robot_angle);
 }
 
 void mpu6050Task(void *params) {
     printf("MPU6050 init...\n");
     mpu6050Init();
+    pidInit();
 
     #define GYRO_BIAS_X 10.121f // Pre-calibrated bias for gyro X axis, in degrees per second
     float gyro_bias_x = GYRO_BIAS_X;
@@ -106,7 +118,19 @@ void mpu6050Task(void *params) {
         // Complementary filter to combine accelerometer and gyroscope data
         robot_angle = alpha * (robot_angle + gx_final * dt) + (1.0f - alpha) * angle_acc;
         
-        mpuDataToTeleplot(ax, ay, az, gx, gy, gz, angle_acc, robot_angle);
+        float speed = pidCalculate(robot_angle, 0.1f);
+        float error = pidGetError();
+
+        Motor_direction dir = speed > 0 ? MOTOR_DIRECTION_CW : MOTOR_DIRECTION_CCW;
+        if (speed > -DEAD_BAND && speed < DEAD_BAND) {
+            speed = 0.0f; // Deadband to prevent jitter
+        } else if (speed > -MIN_MOTOR_PWM && speed < MIN_MOTOR_PWM) {
+            speed = MIN_MOTOR_PWM; // Minimum PWM to overcome motor deadzone
+        }
+        uint8_t pwm =  (uint8_t)fminf(fabsf(speed), 255.0f);
+        motorSetSpeed(MOTOR_A, dir, pwm);
+        motorSetSpeed(MOTOR_B, dir, pwm);
+        mpuDataToTeleplot(ax, ay, az, gx, gy, gz, angle_acc, robot_angle, pwm, error);
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

@@ -15,6 +15,7 @@
 #include "task.h"
 #include "stream_buffer.h"
 #include <stdlib.h>
+#include "pid.h"
 
 
 #define UART_ID   uart0
@@ -82,21 +83,33 @@ static void uartInit() {
 
 static void parceCommand(const char* command) {
     printf("Received command: %s\n", command);
+    char response[BUFFER_SIZE] = {'\0'};
 
     switch (command[0]) {
     case 'P':
         float kP = strtof(&command[1], NULL);
-        printf("kP: %f\n", kP);
+        snprintf(response, BUFFER_SIZE, "kP: %f\n", kP);
+        uart_puts(UART_ID, response);
+        // printf("kP: %f\n", kP);
+        pidSetKp(kP);
         break;
     case 'D':
         float kD = strtof(&command[1], NULL);
-        printf("kD: %f\n", kD);
+        snprintf(response, BUFFER_SIZE, "kD: %f\n", kD);
+        uart_puts(UART_ID, response);
+        // printf("kD: %f\n", kD);
+        pidSetKd(kD);
         break;
     case 'I':
         float kI = strtof(&command[1], NULL);
-        printf("kI: %f\n", kI);
+        snprintf(response, BUFFER_SIZE, "kI: %f\n", kI);
+        uart_puts(UART_ID, response);
+        // printf("kI: %f\n", kI);
+        pidSetKi(kI);
         break;
     default:
+        snprintf(response, BUFFER_SIZE, "Unknown command: %c\n", command[0]);
+        uart_puts(UART_ID, response);
         break;
     }
     // TODO: O.T Implement command parsing and handling logic here

@@ -56,6 +56,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/motor.c
     src/mpu6050.c
     src/protocol.c
+    src/pid.c
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)
