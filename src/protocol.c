@@ -16,6 +16,7 @@
 #include "stream_buffer.h"
 #include <stdlib.h>
 #include "pid.h"
+#include "storage.h"
 
 
 #define UART_ID   uart0
@@ -81,6 +82,26 @@ static void uartInit() {
     uart_set_irq_enables(UART_ID, true, false);
 }
 
+static void updateStoragePIDConfig(float kp, float ki, float kd)
+{
+    StorageData data = {0};
+    if (!storageRead(&data)) {
+        return;
+    }
+
+    if (kp >= 0.0f) {
+        data.pidConfig.kp = kp;
+    }
+    if (ki >= 0.0f) {
+        data.pidConfig.ki = ki;
+    }
+    if (kd >= 0.0f) {
+        data.pidConfig.kd = kd;
+    }
+
+    storageWrite(&data);
+}
+
 static void parceCommand(const char* command) {
     printf("Received command: %s\n", command);
     char response[BUFFER_SIZE] = {'\0'};
@@ -92,6 +113,7 @@ static void parceCommand(const char* command) {
         uart_puts(UART_ID, response);
         // printf("kP: %f\n", kP);
         pidSetKp(kP);
+        updateStoragePIDConfig(kP, -1.0f, -1.0f);
         break;
     case 'D':
         float kD = strtof(&command[1], NULL);
@@ -99,6 +121,7 @@ static void parceCommand(const char* command) {
         uart_puts(UART_ID, response);
         // printf("kD: %f\n", kD);
         pidSetKd(kD);
+        updateStoragePIDConfig(-1.0f, -1.0f, kD);
         break;
     case 'I':
         float kI = strtof(&command[1], NULL);
@@ -106,6 +129,7 @@ static void parceCommand(const char* command) {
         uart_puts(UART_ID, response);
         // printf("kI: %f\n", kI);
         pidSetKi(kI);
+        updateStoragePIDConfig(-1.0f, kI, -1.0f);
         break;
     default:
         snprintf(response, BUFFER_SIZE, "Unknown command: %c\n", command[0]);

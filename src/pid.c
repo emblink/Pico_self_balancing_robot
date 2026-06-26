@@ -8,10 +8,10 @@ static float error = 0.0f;
 static float prevError = 0.0f;
 static float integral = 0.0f;
 
-void pidInit(void) {
-    Kp = 1.2f;
-    Kd = 0.01f;
-    Ki = 0.01f;
+void pidInit(float kp, float ki, float kd) {
+    Kp = kp;
+    Kd = kd;
+    Ki = ki;
     target = 0.0f;
     error = 0.0f;
     prevError = 0.0f;

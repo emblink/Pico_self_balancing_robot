@@ -23,8 +23,14 @@
 #include "protocol.h"
 #include "pid.h"
 
+#include "storage.h"
+#include <hardware/watchdog.h>
+
 #define MIN_MOTOR_PWM 40.0f
 #define DEAD_BAND 10.0f
+
+#define CORE_0 (1 << 0)
+#define CORE_1 (1 << 1)
 
 TaskHandle_t blinkTaskHandle = NULL;
 TaskHandle_t motorTaskHandle = NULL;
@@ -72,7 +78,25 @@ static void mpuDataToTeleplot(float ax, float ay, float az, float gx, float gy, 
 void mpu6050Task(void *params) {
     printf("MPU6050 init...\n");
     mpu6050Init();
-    pidInit();
+    bool res = storageInit();
+    StorageData data = {0};
+    if (!res) {
+        printf("Storage not initialized, initializing with default values...\n");
+
+        data.pidConfig.kp = 5.0f;
+        data.pidConfig.ki = 0.0f;
+        data.pidConfig.kd = 1.0f;
+        res = storageWrite(&data);
+        if (!res) {
+            printf("Failed to write default storage, rebooting...\n");
+            watchdog_reboot(0, 0, 500);
+            for (;;) {
+                tight_loop_contents();
+            }
+        }
+    }
+    storageRead(&data);
+    pidInit(data.pidConfig.kp, data.pidConfig.ki, data.pidConfig.kd);
 
     #define GYRO_BIAS_X 10.121f // Pre-calibrated bias for gyro X axis, in degrees per second
     float gyro_bias_x = GYRO_BIAS_X;
@@ -245,45 +269,49 @@ int main() {
 
     printf("Hello, world!\n");
 
-    BaseType_t status = xTaskCreate(
+    BaseType_t status = xTaskCreateAffinitySet(
         blinkTask,
         "blinkTask",
         1024,
         NULL,
         2,
+        CORE_1,
         &blinkTaskHandle
     );
 
     configASSERT(status == pdPASS);
 
-    status = xTaskCreate(
+    status = xTaskCreateAffinitySet(
         motorTask,
         "motorTask",
         1024,
         NULL,
         2,
+        CORE_1,
         &motorTaskHandle
     );
 
     configASSERT(status == pdPASS);
 
-    status = xTaskCreate(
+    status = xTaskCreateAffinitySet(
         encoderTask,
         "encoderTask",
         1024,
         NULL,
         2,
+        CORE_1,
         &encoderTaskHandle
     );
 
     configASSERT(status == pdPASS);
 
-    status = xTaskCreate(
+    status = xTaskCreateAffinitySet(
         mpu6050Task,
         "mpu6050Task",
         1024,
         NULL,
         2,
+        CORE_0,
         &mpu6050TaskHandle
     );
 

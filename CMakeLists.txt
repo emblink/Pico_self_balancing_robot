@@ -57,6 +57,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/mpu6050.c
     src/protocol.c
     src/pid.c
+    src/storage.c
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)
@@ -69,6 +70,10 @@ pico_set_program_version(${CMAKE_PROJECT_NAME} "0.1")
 pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
 
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
+    PICO_FLASH_ASSUME_CORE1_SAFE=1
+)
+
 # Add the standard library to the build
 target_link_libraries(${CMAKE_PROJECT_NAME}
     pico_stdlib
@@ -78,6 +83,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     hardware_pio
     hardware_i2c
     hardware_uart
+    hardware_watchdog
+    hardware_flash
     )
 
 # Add the standard include files to the build

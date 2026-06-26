@@ -1,6 +1,6 @@
 #pragma once
 
-void pidInit(void);
+void pidInit(float kp, float ki, float kd);
 void pidSetTunings(float kp, float ki, float kd);
 void pidSetKp(float kp);
 void pidSetKi(float ki);
